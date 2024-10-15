@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CS4406 - Programming Assignment Unit 6</title>
+    <style>
+        /* Reset default margin and hide overflow to make the canvas fill the screen */
+        body { margin: 0; overflow: hidden; }
+        /* Ensure the canvas displays as a block-level element */
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+
+<!-- Include the Three.js library from a CDN -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.94.0/build/three.min.js"></script>
+
+<script>
+    // Create a new Three.js scene where all visual elements will be added
+    var scene = new THREE.Scene();
+
+    // Set up a perspective camera with:
+    // - Field of view: 45 degrees
+    // - Aspect ratio: window's aspect ratio
+    // - Near clipping plane: 0.1 units
+    // - Far clipping plane: 1000 units
+    var camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+    );
+    // Position the camera along the z-axis to view the scene
+    camera.position.set(0, 0, 30);
+
+    // Initialize a WebGL renderer with antialiasing for smoother edges
+    var renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Set the renderer's size to match the window dimensions
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    // Enable shadow mapping for realistic shadows
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Use soft shadows
+    // Append the renderer's canvas element to the DOM
+    document.getElementById('container').appendChild(renderer.domElement);
+
+    // Create a group to hold all solar system objects (Earth and Moon)
+    var solarSystem = new THREE.Group();
+    scene.add(solarSystem);
+
+    // Initialize a texture loader for loading images onto materials
+    var textureLoader = new THREE.TextureLoader();
+    // Load Earth's texture map from the specified URL
+    var earthTexture = textureLoader.load('https://upload.wikimedia.org/wikipedia/commons/c/cf/WorldMap-A_non-Frame.png');
+    // Load Moon's texture map from the specified URL
+    var moonTexture = textureLoader.load('https://upload.wikimedia.org/wikipedia/commons/d/db/Moonmap_from_clementine_data.png');
+
+    // Create materials for Earth and Moon using the loaded textures
+    var earthMaterial = new THREE.MeshPhongMaterial({ map: earthTexture });
+    var moonMaterial = new THREE.MeshPhongMaterial({ map: moonTexture });
+
+    // Define the geometry for Earth: a sphere with radius 5 units and high detail
+    var earthMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(3.67, 64, 64),
+        earthMaterial
+    );
+    // Enable shadow casting and receiving on Earth
+    earthMesh.castShadow = true;
+    earthMesh.receiveShadow = true;
+    // Add Earth to the solar system group
+    solarSystem.add(earthMesh);
+
+    // Define the geometry for Moon: a smaller sphere with radius 2.25 units
+    var moonMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 32, 32),
+        moonMaterial
+    );
+    // Position the Moon at a certain distance from Earth along the x-axis
+    moonMesh.position.set(10, 0, 0);
+    // Enable shadow casting and receiving on Moon
+    moonMesh.castShadow = true;
+    moonMesh.receiveShadow = true;
+
+    // Create an Object3D to represent Moon's orbit around Earth
+    var moonOrbit = new THREE.Object3D();
+    // Add the Moon mesh to its orbit
+    moonOrbit.add(moonMesh);
+    // Add Moon's orbit to the solar system group
+    solarSystem.add(moonOrbit);
+
+    // Create a point light to simulate the Sun's light
+    var sunLight = new THREE.PointLight(0xffffff, 0.75);
+    // Position the Sun far from Earth and Moon to simulate sunlight direction
+    sunLight.position.set(250, 0, 125);
+    // Enable shadow casting from the Sun light
+    sunLight.castShadow = true;
+    // Increase shadow map size for higher quality shadows
+    sunLight.shadow.mapSize.width = 4096;
+    sunLight.shadow.mapSize.height = 4096;
+    // Adjust the shadow camera's near and far planes for optimal shadow rendering
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 300;
+    // Add the sunlight to the scene
+    scene.add(sunLight);
+
+    // Add a subtle ambient light to illuminate areas not reached by the sunlight
+    scene.add(new THREE.AmbientLight(0x404040, 0.2));
+
+    // Set Earth's rotation speed
+    var earthRotationSpeed = 0.1;
+    // Calculate Moon's orbit speed based on a 29.5-day lunar cycle
+    var moonOrbitSpeed = earthRotationSpeed / 29.5;
+
+    // Animation loop to update the scene for each frame
+    function animate() {
+        // Schedule the animate function to be called on the next frame
+        requestAnimationFrame(animate);
+        // Rotate Earth around its Y-axis to simulate day-night cycle
+        earthMesh.rotation.y += earthRotationSpeed;
+        // Rotate Moon's orbit around Earth to simulate lunar orbit
+        // This also results in the rotation of the moon matching the orbit
+        // of the moon precisely, resulting in realistic tidal locking
+        moonOrbit.rotation.y += moonOrbitSpeed;
+        // Render the updated scene from the perspective of the camera
+        renderer.render(scene, camera);
+    }
+
+    // Start the animation loop
+    animate();
+
+    // Event listener to handle window resizing
+    window.addEventListener('resize', function() {
+        // Update camera's aspect ratio and projection matrix to match new window size
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        // Adjust renderer's size to fill the new window dimensions
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+</body>
+</html>
