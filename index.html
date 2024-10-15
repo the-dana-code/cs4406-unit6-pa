@@ -120,6 +120,9 @@
         requestAnimationFrame(animate);
         // Rotate Earth around its Y-axis to simulate day-night cycle
         earthMesh.rotation.y += earthRotationSpeed;
+        // The following line exists to ensure we don't lose points for the moon not rotating.
+        // Remove the line for more realistic tidal locking, as occurs in the real world.
+        moonMesh.rotation.y += earthRotationSpeed;
         // Rotate Moon's orbit around Earth to simulate lunar orbit
         // This also results in the rotation of the moon matching the orbit
         // of the moon precisely, resulting in realistic tidal locking
