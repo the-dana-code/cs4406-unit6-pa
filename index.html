@@ -77,6 +77,9 @@
     );
     // Position the Moon at a certain distance from Earth along the x-axis
     moonMesh.position.set(10, 0, 0);
+    // Rotate the texture so that they correct portion of the image faces the earth
+    // This is important due to tidal locking.
+    moonMesh.rotation.y = Math.PI;
     // Enable shadow casting and receiving on Moon
     moonMesh.castShadow = true;
     moonMesh.receiveShadow = true;
